@@ -3,9 +3,17 @@ const path = require("path");
 const crypto = require("crypto");
 const logger = require("./logger");
 
-class SecurityManager {
+/**
+ * Security utility for handling file operations and path validation
+ * @class
+ */
+class Security {
+  /**
+   * Creates a new Security instance
+   */
   constructor() {
     this.checksums = new Map();
+    this.homeDir = process.env.HOME || process.env.USERPROFILE;
   }
 
   // Generate checksum for a file
@@ -54,39 +62,124 @@ class SecurityManager {
     }
   }
 
+  /**
+   * Checks if a path is safe to operate on (within home directory)
+   * @param {string} targetPath - The path to check
+   * @returns {boolean} True if the path is safe, false otherwise
+   */
+  isPathSafe(targetPath) {
+    const resolvedPath = path.resolve(targetPath);
+    return resolvedPath.startsWith(this.homeDir);
+  }
+
+  /**
+   * Sanitizes a file name to prevent path traversal and invalid characters
+   * @param {string} fileName - The file name to sanitize
+   * @returns {string} The sanitized file name
+   */
+  sanitizeFileName(fileName) {
+    // Remove any path traversal attempts
+    const sanitized = fileName.replace(/[\\/]/g, "");
+    // Remove any null bytes
+    return sanitized.replace(/\0/g, "");
+  }
+
+  /**
+   * Validates file content based on file type
+   * @param {string} content - The content to validate
+   * @param {string} fileType - The type of file (extension)
+   * @returns {boolean} True if the content is valid, false otherwise
+   */
+  validateFileContent(content, fileType) {
+    try {
+      switch (fileType.toLowerCase()) {
+        case "json":
+          JSON.parse(content);
+          return true;
+        case "js":
+          // Basic JavaScript validation
+          return !content.includes("require('") && !content.includes("eval(");
+        case "html":
+          // Basic HTML validation
+          return content.includes("<html") && content.includes("</html>");
+        case "css":
+          // Basic CSS validation
+          return content.includes("{") && content.includes("}");
+        default:
+          return true;
+      }
+    } catch (error) {
+      logger.error("Content validation failed", {
+        fileType,
+        error: error.message,
+      });
+      return false;
+    }
+  }
+
+  /**
+   * Creates a directory securely with proper permissions
+   * @param {string} dirPath - The path to create
+   * @returns {Promise<void>}
+   * @throws {Error} If directory creation fails
+   */
+  async secureMkdir(dirPath) {
+    try {
+      if (!this.isPathSafe(dirPath)) {
+        throw new Error("Cannot create directory outside of home directory");
+      }
+
+      // Create directory with restricted permissions
+      fs.mkdirSync(dirPath, { recursive: true, mode: 0o755 });
+      logger.debug(`Created directory securely: ${dirPath}`);
+    } catch (error) {
+      logger.error("Failed to create directory securely", {
+        dirPath,
+        error: error.message,
+      });
+      throw error;
+    }
+  }
+
   // Secure file write with checksum verification
   async secureWrite(filePath, content, options = {}) {
     try {
-      // Create temporary file
-      const tempPath = `${filePath}.tmp`;
-      fs.writeFileSync(tempPath, content, options);
-
-      // Verify the temporary file
-      const checksum = this.generateChecksum(tempPath);
-
-      // If file exists, verify its integrity
-      if (fs.existsSync(filePath)) {
-        const existingChecksum = this.checksums.get(filePath);
-        if (
-          existingChecksum &&
-          !this.verifyIntegrity(filePath, existingChecksum)
-        ) {
-          throw new Error("File integrity check failed");
-        }
+      if (!this.isPathSafe(filePath)) {
+        throw new Error("Cannot write file outside of home directory");
       }
 
-      // Move temporary file to final location
-      fs.renameSync(tempPath, filePath);
+      // Create temporary file
+      const tempPath = `${filePath}.${crypto
+        .randomBytes(8)
+        .toString("hex")}.tmp`;
+      const sanitizedPath = path.join(
+        path.dirname(filePath),
+        this.sanitizeFileName(path.basename(filePath))
+      );
+
+      // Write to temporary file first
+      fs.writeFileSync(tempPath, content, { mode: 0o644 });
+      logger.debug(`Wrote content to temporary file: ${tempPath}`);
+
+      // Validate the written content
+      const writtenContent = fs.readFileSync(tempPath, "utf8");
+      if (writtenContent !== content) {
+        throw new Error("Content validation failed after writing");
+      }
+
+      // Move temporary file to target location
+      fs.renameSync(tempPath, sanitizedPath);
+      logger.debug(`Moved temporary file to target location: ${sanitizedPath}`);
 
       // Store new checksum
-      this.storeChecksum(filePath);
+      this.storeChecksum(sanitizedPath);
 
       logger.info("Secure file write completed", { filePath });
       return true;
     } catch (error) {
       // Clean up temporary file if it exists
-      if (fs.existsSync(`${filePath}.tmp`)) {
-        fs.unlinkSync(`${filePath}.tmp`);
+      if (fs.existsSync(tempPath)) {
+        fs.unlinkSync(tempPath);
       }
       logger.error("Secure file write failed", {
         filePath,
@@ -95,67 +188,6 @@ class SecurityManager {
       throw error;
     }
   }
-
-  // Secure directory creation
-  async secureMkdir(dirPath, options = { recursive: true }) {
-    try {
-      // Check for path traversal
-      if (!this.isPathSafe(dirPath)) {
-        throw new Error("Path traversal detected");
-      }
-
-      // Create directory
-      fs.mkdirSync(dirPath, options);
-
-      logger.info("Secure directory creation completed", { dirPath });
-      return true;
-    } catch (error) {
-      logger.error("Secure directory creation failed", {
-        dirPath,
-        error: error.message,
-      });
-      throw error;
-    }
-  }
-
-  // Check if path is safe (prevents path traversal)
-  isPathSafe(targetPath) {
-    const homeDir = process.env.HOME || process.env.USERPROFILE;
-    const resolvedPath = path.resolve(targetPath);
-    return resolvedPath.startsWith(homeDir);
-  }
-
-  // Sanitize file name
-  sanitizeFileName(fileName) {
-    // Remove any path traversal attempts
-    const sanitized = fileName.replace(/[^a-zA-Z0-9-_.]/g, "_");
-    return sanitized || "unnamed_file";
-  }
-
-  // Validate file content
-  validateFileContent(content, fileType) {
-    switch (fileType) {
-      case "json":
-        try {
-          JSON.parse(content);
-          return true;
-        } catch {
-          return false;
-        }
-      case "html":
-        return /<html[^>]*>[\s\S]*<\/html>/i.test(content);
-      case "javascript":
-        // Basic JavaScript validation
-        try {
-          new Function(content);
-          return true;
-        } catch {
-          return false;
-        }
-      default:
-        return true;
-    }
-  }
 }
 
-module.exports = new SecurityManager();
+module.exports = new Security();

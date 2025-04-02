@@ -8,7 +8,10 @@ const logger = require("./utils/logger");
 const cleanup = require("./utils/cleanup");
 const security = require("./utils/security");
 
-// Colors for output
+/**
+ * ANSI color codes for terminal output
+ * @type {Object.<string, string>}
+ */
 const colors = {
   red: "\x1b[31m",
   green: "\x1b[32m",
@@ -16,10 +19,19 @@ const colors = {
   reset: "\x1b[0m",
 };
 
-// Default project name with date
+/**
+ * Generates a default project name using the current date
+ * Format: project-YYYY-MM-DD
+ * @type {string}
+ */
 const defaultName = `project-${new Date().toISOString().split("T")[0]}`;
 
-// File options with their default states
+/**
+ * Default file options for project scaffolding
+ * Each key represents a file that can be included in the project
+ * The value indicates whether the file is selected by default
+ * @type {Object.<string, boolean>}
+ */
 const defaultFiles = {
   "index.html": true,
   "style.css": true,
@@ -31,7 +43,12 @@ const defaultFiles = {
   "LICENSE.md": true,
 };
 
-// Function to check if directory exists and is not empty
+/**
+ * Checks if a directory exists and contains files
+ * @param {string} dir - The directory path to check
+ * @returns {boolean} True if the directory exists and is not empty, false otherwise
+ * @throws {Error} If there's an error reading the directory
+ */
 function isDirectoryNotEmpty(dir) {
   try {
     const files = fs.readdirSync(dir);
@@ -41,7 +58,13 @@ function isDirectoryNotEmpty(dir) {
   }
 }
 
-// Function to create the project directory and files
+/**
+ * Creates a new project with the specified files in the given directory
+ * @param {string} dir - The target directory path
+ * @param {Object.<string, boolean>} files - Object containing file names and their selection status
+ * @returns {Promise<boolean>} True if project creation was successful, false otherwise
+ * @throws {Error} If there's an error during project creation
+ */
 async function createProject(dir, files) {
   try {
     logger.info("Starting project creation", { dir, files });
@@ -251,7 +274,12 @@ A web project created on ${new Date().toISOString().split("T")[0]}.
   }
 }
 
-// Main function
+/**
+ * Main entry point for the scaffold tool
+ * Handles user interaction and orchestrates project creation
+ * @returns {Promise<void>}
+ * @throws {Error} If there's an error during the main process
+ */
 async function main() {
   try {
     // Welcome message
