@@ -1,6 +1,6 @@
 # Web Project Scaffolder
 
-A simple CLI tool for quickly scaffolding web projects. Built with Node.js and includes logging, backup, andenhanced security features.
+A CLI tool for quickly scaffolding simple web projects. Built with Node.js and includes logging, backup, andenhanced security features.
 
 ## Features
 
@@ -14,6 +14,28 @@ A simple CLI tool for quickly scaffolding web projects. Built with Node.js and i
 - Yarn as default package manager
 - Cross-platform support (Linux, macOS)
   - Windows is unsupported.
+
+## Default Files
+
+The following files are available for scaffolding (all selected by default):
+
+- `index.html`: Basic HTML template
+- `style.css`: Empty CSS file
+- `script.js`: Empty JavaScript file
+- `.gitignore`: Git ignore file with common exclusions
+- `.nvmrc`: Node.js version specification (v18)
+- `package.json`: Basic Node.js project configuration
+- `README.md`: Project documentation template
+- `LICENSE.md`: MIT license file
+
+## Error Handling
+
+The tool includes error handling:
+
+- Automatic rollback on failure
+- Detailed error logging
+- User-friendly error messages
+- Backup restoration capability
 
 ## Installation
 
@@ -158,27 +180,7 @@ rm ~/.scaffold-backups/*.bak
 - Content validation
 - Safe directory creation
 
-## Default Files
 
-The following files are available for scaffolding (all selected by default):
-
-- `index.html`: Basic HTML template
-- `style.css`: Empty CSS file
-- `script.js`: Empty JavaScript file
-- `.gitignore`: Git ignore file with common exclusions
-- `.nvmrc`: Node.js version specification (v18)
-- `package.json`: Basic Node.js project configuration
-- `README.md`: Project documentation template
-- `LICENSE.md`: MIT license file
-
-## Error Handling
-
-The tool includes error handling:
-
-- Automatic rollback on failure
-- Detailed error logging
-- User-friendly error messages
-- Backup restoration capability
 
 ## License
 
