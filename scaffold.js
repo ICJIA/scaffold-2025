@@ -151,7 +151,7 @@ async function createProject(dir, files) {
 !.yarn/versions`;
             break;
           case ".nvmrc":
-            content = "18";
+            content = "v20.19.0";
             break;
           case "package.json":
             content = JSON.stringify(
