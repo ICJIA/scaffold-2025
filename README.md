@@ -1,6 +1,6 @@
 # Web Project Scaffolder
 
-A CLI tool for quickly scaffolding simple web projects. Built with Node.js and includes logging, backup, andenhanced security features.
+A CLI tool to quickly generated a basic web project. Built with Node.js and includes logging, backup, andenhanced security features.
 
 ## Features
 
