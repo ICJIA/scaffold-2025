@@ -1,0 +1,30 @@
+{
+  "name": "web-project-scaffolder",
+  "version": "1.0.0",
+  "description": "A CLI tool for scaffolding web projects with commonly used files",
+  "main": "scaffold.js",
+  "bin": {
+    "scaffold": "./scaffold.js"
+  },
+  "scripts": {
+    "start": "node scaffold.js",
+    "scaffold": "node scaffold.js",
+    "install-alias": "./install-alias.sh"
+  },
+  "keywords": [
+    "scaffold",
+    "web",
+    "project",
+    "generator",
+    "cli"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "inquirer": "^8.2.6"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "packageManager": "yarn@4.1.1"
+}
