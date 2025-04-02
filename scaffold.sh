@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/bin/bash
 
 # Colors for output
 RED='\033[0;31m'
@@ -13,14 +13,14 @@ TARGET_DIR=""
 
 # File options with their default states
 declare -A FILES=(
-    ["index.html"]=1
-    ["style.css"]=1
-    ["script.js"]=1
-    [".gitignore"]=1
-    [".nvmrc"]=1
-    ["package.json"]=1
-    ["README.md"]=1
-    ["LICENSE.md"]=1
+    ["index.html"]=true
+    ["style.css"]=true
+    ["script.js"]=true
+    [".gitignore"]=true
+    [".nvmrc"]=true
+    ["package.json"]=true
+    ["README.md"]=true
+    ["LICENSE.md"]=true
 )
 
 # Function to check if whiptail is installed
@@ -37,19 +37,29 @@ check_whiptail() {
 # Function to create the project directory and files
 create_project() {
     local dir=$1
-    
-    # Create directory
-    if mkdir -p "$dir"; then
-        echo -e "${GREEN}✓ Created directory: $dir${NC}"
-    else
-        echo -e "${RED}✗ Failed to create directory: $dir${NC}"
-        return 1
+    local files=$2
+
+    # Check if directory exists
+    if [ -d "$dir" ]; then
+        if is_directory_not_empty "$dir"; then
+            read -p "Directory $dir already exists and is not empty. Do you want to overwrite it? (y/N) " -n 1 -r
+            echo
+            if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+                echo -e "${YELLOW}Operation cancelled.${NC}"
+                return 1
+            fi
+        fi
+        rm -rf "$dir"
     fi
-    
+
+    # Create directory
+    mkdir -p "$dir"
+    echo -e "${GREEN}✓ Created directory: $dir${NC}"
+
     # Create files
-    for file in "${!FILES[@]}"; do
-        if [ "${FILES[$file]}" -eq 1 ]; then
-            case "$file" in
+    for file in "${!files[@]}"; do
+        if [ "${files[$file]}" = true ]; then
+            case $file in
                 ".gitignore")
                     cat > "$dir/$file" << EOL
 node_modules/
@@ -65,7 +75,7 @@ node_modules/
 EOL
                     ;;
                 ".nvmrc")
-                    echo "18" > "$dir/$file"
+                    echo "v20.19.0" > "$dir/$file"
                     ;;
                 "package.json")
                     cat > "$dir/$file" << EOL
@@ -135,7 +145,7 @@ EOL
             echo -e "${GREEN}✓ Created: $file${NC}"
         fi
     done
-    
+
     return 0
 }
 
@@ -159,34 +169,18 @@ if [ $? -ne 0 ]; then
     exit 0
 fi
 
-# Create file selection menu
-MENU_OPTIONS=()
+# File selection
+echo -e "\nSelect files to include in your project:"
 for file in "${!FILES[@]}"; do
-    MENU_OPTIONS+=("$file" "" "${FILES[$file]}")
-done
-
-# Show file selection dialog
-SELECTED_FILES=$(whiptail --title "Select Files" --checklist \
-    "Choose the files to include in your project:" 20 60 8 \
-    "${MENU_OPTIONS[@]}" \
-    3>&1 1>&2 2>&3)
-
-if [ $? -ne 0 ]; then
-    echo -e "${YELLOW}Installation cancelled${NC}"
-    exit 0
-fi
-
-# Update file selections based on user input
-for file in "${!FILES[@]}"; do
-    if echo "$SELECTED_FILES" | grep -q "\"$file\""; then
-        FILES[$file]=1
-    else
-        FILES[$file]=0
+    read -p "Include $file? (Y/n) " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Nn]$ ]]; then
+        FILES[$file]=false
     fi
 done
 
 # Create the project
-if create_project "$TARGET_DIR/$PROJECT_NAME"; then
+if create_project "$TARGET_DIR/$PROJECT_NAME" FILES; then
     whiptail --title "Success" --msgbox "Project scaffolded successfully!\n\nLocation: $TARGET_DIR/$PROJECT_NAME" 10 60
 else
     whiptail --title "Error" --msgbox "Failed to scaffold project. Please check the error messages above." 10 60

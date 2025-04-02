@@ -1,6 +1,6 @@
 # Web Project Scaffolder
 
-A CLI tool to quickly generated a basic web project. Built with Node.js and includes logging, backup, andenhanced security features.
+A powerful CLI tool for quickly scaffolding web projects with commonly used files and configurations. Built with Node.js and featuring robust logging, backup, and security features.
 
 ## Features
 
@@ -13,29 +13,6 @@ A CLI tool to quickly generated a basic web project. Built with Node.js and incl
 - File integrity verification
 - Yarn as default package manager
 - Cross-platform support (Linux, macOS)
-  - Windows is unsupported.
-
-## Default Files
-
-The following files are available for scaffolding (all selected by default):
-
-- `index.html`: Basic HTML template
-- `style.css`: Empty CSS file
-- `script.js`: Empty JavaScript file
-- `.gitignore`: Git ignore file with common exclusions
-- `.nvmrc`: Node.js version specification (v18)
-- `package.json`: Basic Node.js project configuration
-- `README.md`: Project documentation template
-- `LICENSE.md`: MIT license file
-
-## Error Handling
-
-The tool includes error handling:
-
-- Automatic rollback on failure
-- Detailed error logging
-- User-friendly error messages
-- Backup restoration capability
 
 ## Installation
 
@@ -180,7 +157,52 @@ rm ~/.scaffold-backups/*.bak
 - Content validation
 - Safe directory creation
 
+## Default Files
 
+The following files are available for scaffolding (all selected by default):
+
+- `index.html`: Basic HTML template
+- `style.css`: Empty CSS file
+- `script.js`: Empty JavaScript file
+- `.gitignore`: Git ignore file with common exclusions
+- `.nvmrc`: Node.js version specification (v20.19.0)
+- `package.json`: Basic Node.js project configuration
+- `README.md`: Project documentation template
+- `LICENSE.md`: MIT license file
+
+## Error Handling
+
+The tool includes comprehensive error handling:
+
+- Automatic rollback on failure
+- Detailed error logging
+- User-friendly error messages
+- Backup restoration capability
+
+## Requirements
+
+### Node.js Version
+
+- Node.js >= 14.0.0
+- Default Node.js version for projects: v20.19.0
+
+### Package Manager
+
+- Yarn (recommended)
+  - Version: 1.22.22 < 2.0.0
+  - Default package manager for projects: yarn@4.1.1
+
+### Shell Script Dependencies
+
+If using the shell script version (`scaffold.sh`), the following dependencies are required:
+
+- `whiptail` for interactive menus
+  - Ubuntu/Debian: `sudo apt-get install whiptail`
+  - macOS: `brew install newt`
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
